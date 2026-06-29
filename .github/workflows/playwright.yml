@@ -1,0 +1,169 @@
+name: Krineo Automation
+
+on:
+  push:
+    branches: [master, test]
+  pull_request:
+    branches: [master, test]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+
+  #################################################################
+  # Initialize
+  #################################################################
+
+  initialize:
+    name: 🚀 Initialize
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+  #################################################################
+  # Preparation
+  #################################################################
+
+  preparation:
+    name: ⚙️ Preparation
+    needs: initialize
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate Environment
+        run: |
+          echo "Preparing test environment..."
+
+  #################################################################
+  # Run Testing
+  #################################################################
+
+  run-testing:
+    name: 🧪 Run Testing
+    needs: preparation
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps
+
+      - name: Execute Playwright Tests
+        run: npm run test
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          EMAIL: ${{ secrets.EMAIL }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          HEADLESS: true
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: reports/allure-results
+          retention-days: 7
+
+  #################################################################
+  # Reporting
+  #################################################################
+
+  reporting:
+    name: 📊 Reporting
+    needs: run-testing
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: reports/allure-results
+
+      - name: Generate Allure Report
+        run: |
+          # Menggunakan random string sebagai slug
+          SLUG=$(openssl rand -hex 8)
+          
+          # Generate report ke dalam folder slug tersebut
+          npx allure generate \
+          ./reports/allure-results \
+          --clean \
+          -o ./deploy-site/$SLUG
+          
+          # Membuat file index.html agar root URL otomatis redirect ke slug terbaru
+          echo "<meta http-equiv='refresh' content='0; URL=./$SLUG/' />" > ./deploy-site/index.html
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Allure Report
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./deploy-site
+
+      - name: Deploy Report
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  #################################################################
+  # Complete
+  #################################################################
+
+  complete:
+    name: ✅ Complete
+    needs: reporting
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pipeline Summary
+        run: |
+          echo "=================================="
+          echo "Krineo Automation Finished"
+          echo "Status : ${{ needs.reporting.result }}"
+          echo "=================================="

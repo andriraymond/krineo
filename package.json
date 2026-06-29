@@ -1,0 +1,32 @@
+{
+  "name": "krineo",
+  "version": "1.0.0",
+  "description": "Krineo, from the Greek word \"krínō\" (to judge and examine), is a Playwright automation framework for API testing, database validation, and business rule verification. Evidence before trust.",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "report": "allure generate ./reports/allure-results --clean -o ./reports/allure-report && allure open ./reports/allure-report",
+    "clean": "node -e \"const fs=require('fs'); ['reports', 'playwright-report'].forEach(d => fs.rmSync(d, {recursive:true, force:true}))\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andriraymond/krineo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/andriraymond/krineo/issues"
+  },
+  "homepage": "https://github.com/andriraymond/krineo#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.0.1",
+    "allure-commandline": "^2.43.0",
+    "allure-playwright": "^3.10.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
+  }
+}
