@@ -118,3 +118,31 @@ npx playwright install
      "clean": "node -e \"const fs=require('fs'); ['reports', 'playwright-report'].forEach(d => fs.rmSync(d, {recursive:true, force:true}))\""
    }
    ```
+
+---
+
+## 🥒 Step-by-Step BDD Installation (From Scratch)
+
+If you are building the **Playwright BDD (Cucumber)** integration from an empty directory, follow these steps:
+
+### 1. Initialize Node Project
+```bash
+npm init -y
+```
+
+### 2. Initialize Playwright
+```bash
+npm init playwright@latest
+```
+> **Note:** During setup, choose **TypeScript** and name the tests folder as **tests**.
+
+### 3. Install Cucumber & Playwright-BDD
+```bash
+npm install -D playwright-bdd @cucumber/cucumber
+```
+
+### 4. Create BDD Folder Structure
+Create the following directories to organize your framework (features, steps, and page objects):
+```bash
+mkdir tests/features tests/pages tests/steps
+```
